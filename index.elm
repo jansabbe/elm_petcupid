@@ -6,6 +6,118 @@ import Html.App as App
 import Html.Events exposing (..)
 
 
+type Kind
+    = Cat
+    | Dog
+    | Chicken
+
+
+type alias Pet =
+    { id : Int
+    , kind : Kind
+    , name : String
+    , img : String
+    , profileText : String
+    }
+
+
+type alias Model =
+    { pets : List Pet
+    , selectedPet : Maybe Pet
+    , search :
+        { textSearch : String
+        , kindFilter : KindFilter
+        }
+    }
+
+
+type KindFilter
+    = Any
+    | Specific Kind
+
+
+type Msg
+    = TextSearch String
+    | Filter KindFilter
+    | Select Pet
+
+
+model : Model
+model =
+    { pets =
+        [ { id = 1
+          , name = "Princess"
+          , kind = Chicken
+          , img = "assets/chicken1.jpg"
+          , profileText = "Meet Princess Fluffybutt! She is one of the fluffiest chickens you will ever meet. Most often you'll find Princess cuddled up in the warmest spot she can find, and if that happens to be in your lap, well then that's fine for her too! Princess also enjoys nomming treats out of your hand, clucking softly under her breath, and following her three sisters around the yard. Get to know Princess today!"
+          }
+        , { id = 2
+          , name = "MrFuzz"
+          , kind = Cat
+          , img = "assets/cat1.jpg"
+          , profileText = "MrFuzz loves belly rubs, and likes playing with pieces of string"
+          }
+        , { id = 3
+          , name = "Burt"
+          , kind = Dog
+          , img = "assets/dog1.jpg"
+          , profileText = "Burt looks cute, but is in reality a though guy. Secretly wants to work for the FBI"
+          }
+        , { id = 4
+          , name = "MissPoes"
+          , kind = Cat
+          , img = "assets/cat2.jpg"
+          , profileText = "MissPoes is a classy lady who appreciates gentle pets"
+          }
+        , { id = 5
+          , name = "Lady"
+          , kind = Dog
+          , img = "assets/dog2.jpg"
+          , profileText = "Lady isn't always very lady-like. She loves rolling in the mud and barking at naughty squirrels"
+          }
+        , { id = 6
+          , name = "Grumpy"
+          , kind = Cat
+          , img = "assets/cat3.jpg"
+          , profileText = "Grumpy basically hates everything, especially dogs. He does looove lasagne though"
+          }
+        , { id = 7
+          , name = "Bobby"
+          , kind = Dog
+          , img = "assets/dog3.jpg"
+          , profileText = "Bobby loves to fetch balls and chase rabbits. Great with kids."
+          }
+        ]
+    , selectedPet = Nothing
+    , search =
+        { textSearch = ""
+        , kindFilter = Any
+        }
+    }
+
+
+isPetSelected model pet =
+    case model.selectedPet of
+        Nothing ->
+            False
+
+        Just selectedPet ->
+            selectedPet.id == pet.id
+
+
+update : Msg -> Model -> Model
+update msg ({ search } as model) =
+    case msg of
+        TextSearch newSearchText ->
+            { model | search = { search | textSearch = newSearchText } }
+
+        Filter newFilter ->
+            { model | search = { search | kindFilter = newFilter } }
+
+        Select pet ->
+            { model | selectedPet = Just pet }
+
+
 petcupidHeader =
     header [ class "colored-background header" ]
         [ img [ class "logo", src "assets/heart.png" ] []
@@ -19,21 +131,15 @@ petcupidFooter =
         ]
 
 
-gallery =
-    div [ class "gallery" ]
-        [ galleryPet { imageUrl = "assets/chicken1.jpg", name = "Princess" }
-        , galleryPet { imageUrl = "assets/cat1.jpg", name = "MrFuzz" }
-        , galleryPet { imageUrl = "assets/dog1.jpg", name = "Burt" }
-        , galleryPet { imageUrl = "assets/cat2.jpg", name = "MissPoes" }
-        , galleryPet { imageUrl = "assets/dog2.jpg", name = "Lady" }
-        , galleryPet { imageUrl = "assets/cat3.jpg", name = "Grumpy" }
-        , galleryPet { imageUrl = "assets/dog3.jpg", name = "Bobby" }
-        ]
+gallery : Model -> Html Msg
+gallery model =
+    div [ class "gallery" ] (List.map (galleryPet model) model.pets)
 
 
-galleryPet pet =
-    div [ class "gallery-pet" ]
-        [ img [ class "profile-picture", src pet.imageUrl ] []
+galleryPet : Model -> Pet -> Html Msg
+galleryPet model pet =
+    div [ classList [ ( "gallery-pet", True ), ( "active", isPetSelected model pet ) ], onClick (Select pet) ]
+        [ img [ class "profile-picture", src pet.img ] []
         , div [ class "overlay" ]
             [ div [ class "overlay-text" ] [ text pet.name ] ]
         ]
@@ -73,28 +179,45 @@ searchForm =
         ]
 
 
-selectedProfile =
-    tinyDialog "Bobby"
-        [ p [] [ text "Bobby loves to fetch balls and chase rabbits. Great with kids." ]
+selectedProfile : Pet -> Html a
+selectedProfile pet =
+    tinyDialog pet.name
+        [ p [] [ text pet.profileText ]
         , div [ class "dialog-centered" ]
             [ button [ type' "button", class "btn btn-primary btn-lg dialog-centered" ] [ text "Setup date" ]
             ]
         ]
 
 
-detail =
+detail : Maybe Pet -> Html a
+detail selectedPet =
     div [ class "gallery-detail" ]
-        [ detailExplanation, searchForm, selectedProfile ]
+        (case selectedPet of
+            Nothing ->
+                [ detailExplanation, searchForm ]
+
+            Just pet ->
+                [ detailExplanation, searchForm, selectedProfile pet ]
+        )
 
 
-main =
+view : Model -> Html Msg
+view model =
     div []
         [ petcupidHeader
         , div [ class "container-fluid" ]
             [ div [ class "row" ]
-                [ div [ class "col-md-9" ] [ gallery ]
-                , div [ class "col-md-3" ] [ detail ]
+                [ div [ class "col-md-9" ] [ gallery model ]
+                , div [ class "col-md-3" ] [ detail model.selectedPet ]
                 ]
             , petcupidFooter
             ]
         ]
+
+
+main =
+    App.beginnerProgram
+        { model = model
+        , view = view
+        , update = update
+        }
