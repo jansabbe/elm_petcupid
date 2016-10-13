@@ -56,7 +56,21 @@ detailExplanation =
 
 
 searchForm =
-    tinyDialog "Find your pet" [ text "bla" ]
+    tinyDialog "Find your pet"
+        [ Html.form []
+            [ div [ class "form-group" ]
+                [ input [ class "form-control", placeholder "Search" ] []
+                ]
+            , div [ class "form-group" ]
+                [ select [ class "form-control" ]
+                    [ option [ value "" ] [ text "All" ]
+                    , option [ value "cat" ] [ text "Cat" ]
+                    , option [ value "dog" ] [ text "Dog" ]
+                    , option [ value "chicken" ] [ text "Chicken" ]
+                    ]
+                ]
+            ]
+        ]
 
 
 selectedProfile =
