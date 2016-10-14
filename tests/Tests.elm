@@ -1,6 +1,7 @@
 module Tests exposing (..)
 
-import Petcupid exposing (..)
+import Models exposing (..)
+import Index.View exposing (..)
 import Test exposing (..)
 import Expect
 import Fuzz

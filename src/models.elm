@@ -37,6 +37,7 @@ type Msg
     = TextSearch String
     | Filter KindFilter
     | Select Pet
+    | GoToSignUp
 
 initialModel : Routing.Route -> Model
 initialModel route = model route
