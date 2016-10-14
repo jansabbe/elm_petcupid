@@ -7,6 +7,9 @@ import Html.App as App
 import Html.Events exposing (..)
 import String exposing (..)
 import Json.Decode
+import Task
+import Http
+import Json.Decode as Json
 
 
 port initialized : Coordinate -> Cmd msg
@@ -16,20 +19,24 @@ port dragged : (Coordinate -> msg) -> Sub msg
 
 
 type alias MapModel =
-    { coordinate : Coordinate }
+    { coordinate : Coordinate, address : String }
 
 
 type alias Coordinate =
-    { longitude : Float, latitude : Float }
+    { latitude : Float, longitude : Float }
 
 
 type Msg
     = MarkerDragged Coordinate
+    | LookupFailed Http.Error
+    | LookedUpCoordinates String
 
 
 initialModel : MapModel
 initialModel =
-    { coordinate = (Coordinate 50.85 4.35) }
+    { coordinate = (Coordinate 50.84768133805717 4.727554321289063)
+    , address = ""
+    }
 
 
 fullProfile =
@@ -46,7 +53,7 @@ interactiveMap : MapModel -> Html Msg
 interactiveMap model =
     div [ class "map" ]
         [ p [] [ em [] [ text "Drag and drop to select the park where you want to play with Bobby" ] ]
-        , p [] [ text ("Coordinate : " ++ (toString model.coordinate.latitude) ++ ", " ++ (toString model.coordinate.longitude)) ]
+        , p [] [ text model.address ]
         , div [ class "map-container", id "mapContainer" ] []
         ]
 
@@ -78,7 +85,21 @@ view model =
 
 init : ( MapModel, Cmd Msg )
 init =
-    ( initialModel, initialized initialModel.coordinate )
+    ( initialModel, Cmd.batch [ initialized initialModel.coordinate, lookup initialModel.coordinate ] )
+
+
+lookup : Coordinate -> Cmd Msg
+lookup { latitude, longitude } =
+    let
+        url =
+            "http://nominatim.openstreetmap.org/reverse?format=json&lat=" ++ (toString latitude) ++ "&lon=" ++ (toString longitude)
+    in
+        Task.perform LookupFailed LookedUpCoordinates (Http.get decodeOpenstreetmap url)
+
+
+decodeOpenstreetmap : Json.Decoder String
+decodeOpenstreetmap =
+    Json.at [ "display_name" ] Json.string
 
 
 subscriptions : MapModel -> Sub Msg
@@ -90,7 +111,13 @@ update : Msg -> MapModel -> ( MapModel, Cmd Msg )
 update msg model =
     case msg of
         MarkerDragged newCoordinate ->
-            ( { model | coordinate = newCoordinate }, Cmd.none )
+            ( { model | coordinate = newCoordinate }, lookup newCoordinate )
+
+        LookupFailed error ->
+            ( model, Cmd.none )
+
+        LookedUpCoordinates address ->
+            ( { model | address = address }, Cmd.none )
 
 
 main =
