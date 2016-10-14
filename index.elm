@@ -4,6 +4,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.App as App
 import Html.Events exposing (..)
+import String exposing (..)
 
 
 type Kind
@@ -104,6 +105,8 @@ isPetSelected model pet =
         Just selectedPet ->
             selectedPet.id == pet.id
 
+filterPets model =
+    List.filter (\pet -> contains model.search.textSearch (pet.profileText ++ pet.name) ) model.pets
 
 update : Msg -> Model -> Model
 update msg ({ search } as model) =
@@ -125,15 +128,14 @@ petcupidHeader =
         ]
 
 
-petcupidFooter =
+petcupidFooter model =
     footer [ class "hugs-bottom colored-background footer" ]
-        [ p [] [ text "© 2015 Cegeka" ]
-        ]
+        [ p [] [ text "© 2015 Cegeka" ] ]
 
 
 gallery : Model -> Html Msg
 gallery model =
-    div [ class "gallery" ] (List.map (galleryPet model) model.pets)
+    div [ class "gallery" ] (List.map (galleryPet model) (filterPets model))
 
 
 galleryPet : Model -> Pet -> Html Msg
@@ -165,7 +167,7 @@ searchForm =
     tinyDialog "Find your pet"
         [ Html.form []
             [ div [ class "form-group" ]
-                [ input [ class "form-control", placeholder "Search" ] []
+                [ input [ class "form-control", placeholder "Search", onInput TextSearch ] []
                 ]
             , div [ class "form-group" ]
                 [ select [ class "form-control" ]
@@ -189,7 +191,7 @@ selectedProfile pet =
         ]
 
 
-detail : Maybe Pet -> Html a
+detail : Maybe Pet -> Html Msg
 detail selectedPet =
     div [ class "gallery-detail" ]
         (case selectedPet of
@@ -210,7 +212,7 @@ view model =
                 [ div [ class "col-md-9" ] [ gallery model ]
                 , div [ class "col-md-3" ] [ detail model.selectedPet ]
                 ]
-            , petcupidFooter
+            , (petcupidFooter model)
             ]
         ]
 
