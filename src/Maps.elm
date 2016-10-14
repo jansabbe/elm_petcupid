@@ -1,6 +1,6 @@
 port module Maps exposing (..)
 
-import Views exposing (..)
+import Index.View exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.App as App
@@ -9,7 +9,8 @@ import String exposing (..)
 import Json.Decode
 import Task
 import Http
-import Json.Decode as Json
+import Json.Decode exposing (..)
+import Debug
 
 
 port initialized : Coordinate -> Cmd msg
@@ -72,7 +73,10 @@ update msg model =
         MarkerDragged newCoordinate ->
             ( { model | coordinate = newCoordinate }, lookup newCoordinate )
 
-        LookupFailed error ->
+        LookupFailed (Http.UnexpectedPayload payload) ->
+            Debug.log payload ( model, Cmd.none )
+
+        LookupFailed _ ->
             ( model, Cmd.none )
 
         LookedUpCoordinates address ->
@@ -127,6 +131,8 @@ lookup { latitude, longitude } =
         Task.perform LookupFailed LookedUpCoordinates (Http.get decodeOpenstreetmap url)
 
 
-decodeOpenstreetmap : Json.Decoder String
+decodeOpenstreetmap : Decoder String
 decodeOpenstreetmap =
-    Json.at [ "display_name" ] Json.string
+    object2 (\road city -> road ++ ", " ++ city)
+        (at [ "address", "road" ] string)
+        (at [ "address", "city" ] string)
