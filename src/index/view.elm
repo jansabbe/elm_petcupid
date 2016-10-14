@@ -155,7 +155,7 @@ signUpPet =
     tinyDialog "Sign up your Pet!"
         [ p [] [ text "TODO be original" ]
         , div [ class "dialog-centered" ]
-            [ button [ type' "button", class "btn btn-primary btn-lg dialog-centered" ] [ text "Sign up pet" ]
+            [ button [ type' "button", class "btn btn-primary btn-lg dialog-centered", onClick GoToSignUp ] [ text "Sign up pet" ]
             ]
         ]
 
