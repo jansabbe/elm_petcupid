@@ -5,6 +5,7 @@ import Html.Attributes exposing (..)
 import Html.App as App
 import Html.Events exposing (..)
 import String exposing (..)
+import Json.Decode
 
 
 type Kind
@@ -105,15 +106,39 @@ isPetSelected model pet =
         Just selectedPet ->
             selectedPet.id == pet.id
 
-
-filterPets : String -> List Pet -> List Pet
-filterPets textSearch pets =
+filterPetsOnTextSearch : String -> List Pet -> List Pet
+filterPetsOnTextSearch textSearch pets =
     let
         petFilter =
             \pet -> contains (textSearch |> toLower) (pet.profileText ++ pet.name |> toLower)
     in
         List.filter petFilter pets
 
+filterPetsOnKind : KindFilter -> List Pet -> List Pet
+filterPetsOnKind kindSearch pets =
+    let
+        petFilter =
+            \pet -> Specific pet.kind == kindSearch || Any == kindSearch
+    in
+        List.filter petFilter pets
+
+targetValueKindDecoder : Json.Decode.Decoder KindFilter
+targetValueKindDecoder =
+    targetValue `Json.Decode.andThen` \val ->
+        case val of
+        "Any" -> Json.Decode.succeed Any
+        "Cat" -> Json.Decode.succeed (Specific Cat)
+        "Dog" -> Json.Decode.succeed (Specific Dog)
+        "Chicken" -> Json.Decode.succeed (Specific Chicken)
+        _ -> Json.Decode.fail ("Invalid Kind: " ++ val)
+
+mapKindFilterToString : KindFilter -> String
+mapKindFilterToString kindFilter =
+    case kindFilter of
+    Any -> "Any"
+    (Specific Cat) -> "Cat"
+    (Specific Dog) -> "Dog"
+    (Specific Chicken) -> "Chicken"
 
 update : Msg -> Model -> Model
 update msg ({ search } as model) =
@@ -134,16 +159,14 @@ petcupidHeader =
         , text "PetCupid"
         ]
 
-
 petcupidFooter model =
     footer [ class "hugs-bottom colored-background footer" ]
-        [ p [] [ text "© 2015 Cegeka" ] ]
+        [ p [] [ text ("© 2015 Cegeka" ++ (mapKindFilterToString model.search.kindFilter)) ] ]
 
 
 gallery : Model -> Html Msg
 gallery model =
-    div [ class "gallery" ] (List.map (galleryPet model) (filterPets model.search.textSearch model.pets))
-
+    div [ class "gallery" ] (List.map (galleryPet model) (filterPetsOnKind model.search.kindFilter (filterPetsOnTextSearch model.search.textSearch model.pets)))
 
 galleryPet : Model -> Pet -> Html Msg
 galleryPet model pet =
@@ -169,6 +192,11 @@ detailExplanation =
             ]
         ]
 
+viewOption : KindFilter -> Html Msg
+viewOption kind =
+    option
+        [ value <| mapKindFilterToString kind ]
+        [ text <| mapKindFilterToString kind ]
 
 searchForm =
     tinyDialog "Find your pet"
@@ -177,16 +205,15 @@ searchForm =
                 [ input [ class "form-control", placeholder "Search", onInput TextSearch ] []
                 ]
             , div [ class "form-group" ]
-                [ select [ class "form-control" ]
-                    [ option [ value "" ] [ text "All" ]
-                    , option [ value "cat" ] [ text "Cat" ]
-                    , option [ value "dog" ] [ text "Dog" ]
-                    , option [ value "chicken" ] [ text "Chicken" ]
+                [ select [ class "form-control", on "change" (Json.Decode.map Filter targetValueKindDecoder ) ]
+                    [ viewOption Any
+                    , viewOption (Specific Cat)
+                    , viewOption (Specific Dog)
+                    , viewOption (Specific Chicken)
                     ]
                 ]
             ]
         ]
-
 
 selectedProfile : Pet -> Html a
 selectedProfile pet =

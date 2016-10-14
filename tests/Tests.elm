@@ -13,13 +13,13 @@ all =
         [ fuzz Fuzz.string "can search by name" <|
             \name ->
                 [ { id = 1, name = name, kind = Cat, img = "cat.jpg", profileText = "" } ]
-                    |> filterPets name
+                    |> filterPetsOnTextSearch name
                     |> List.length
                     |> Expect.equal 1
         , fuzz Fuzz.string "can search by name in case insensitive way" <|
             \name ->
                 [ { id = 1, name = name, kind = Cat, img = "cat.jpg", profileText = "" } ]
-                    |> filterPets (String.toLower name)
+                    |> filterPetsOnTextSearch (String.toLower name)
                     |> List.length
                     |> Expect.equal 1
         ]
