@@ -8,6 +8,7 @@ import String exposing (..)
 import Json.Decode
 import Models exposing (..)
 
+
 isPetSelected model pet =
     case model.selectedPet of
         Nothing ->
@@ -15,6 +16,7 @@ isPetSelected model pet =
 
         Just selectedPet ->
             selectedPet.id == pet.id
+
 
 filterPetsOnTextSearch : String -> List Pet -> List Pet
 filterPetsOnTextSearch textSearch pets =
@@ -24,6 +26,7 @@ filterPetsOnTextSearch textSearch pets =
     in
         List.filter petFilter pets
 
+
 filterPetsOnKind : KindFilter -> List Pet -> List Pet
 filterPetsOnKind kindSearch pets =
     let
@@ -32,23 +35,44 @@ filterPetsOnKind kindSearch pets =
     in
         List.filter petFilter pets
 
+
 targetValueKindDecoder : Json.Decode.Decoder KindFilter
 targetValueKindDecoder =
-    targetValue `Json.Decode.andThen` \val ->
-        case val of
-        "Any" -> Json.Decode.succeed Any
-        "Cat" -> Json.Decode.succeed (Specific Cat)
-        "Dog" -> Json.Decode.succeed (Specific Dog)
-        "Chicken" -> Json.Decode.succeed (Specific Chicken)
-        _ -> Json.Decode.fail ("Invalid Kind: " ++ val)
+    targetValue
+        `Json.Decode.andThen`
+            \val ->
+                case val of
+                    "Any" ->
+                        Json.Decode.succeed Any
+
+                    "Cat" ->
+                        Json.Decode.succeed (Specific Cat)
+
+                    "Dog" ->
+                        Json.Decode.succeed (Specific Dog)
+
+                    "Chicken" ->
+                        Json.Decode.succeed (Specific Chicken)
+
+                    _ ->
+                        Json.Decode.fail ("Invalid Kind: " ++ val)
+
 
 mapKindFilterToString : KindFilter -> String
 mapKindFilterToString kindFilter =
     case kindFilter of
-    Any -> "Any"
-    (Specific Cat) -> "Cat"
-    (Specific Dog) -> "Dog"
-    (Specific Chicken) -> "Chicken"
+        Any ->
+            "Any"
+
+        Specific Cat ->
+            "Cat"
+
+        Specific Dog ->
+            "Dog"
+
+        Specific Chicken ->
+            "Chicken"
+
 
 petcupidHeader =
     header [ class "colored-background header" ]
@@ -56,14 +80,16 @@ petcupidHeader =
         , text "PetCupid"
         ]
 
-petcupidFooter model =
+
+petcupidFooter =
     footer [ class "hugs-bottom colored-background footer" ]
-        [ p [] [ text ("© 2015 Cegeka" ++ (mapKindFilterToString model.search.kindFilter)) ] ]
+        [ p [] [ text "© 2015 Cegeka" ] ]
 
 
 gallery : Model -> Html Msg
 gallery model =
     div [ class "gallery" ] (List.map (galleryPet model) (filterPetsOnKind model.search.kindFilter (filterPetsOnTextSearch model.search.textSearch model.pets)))
+
 
 galleryPet : Model -> Pet -> Html Msg
 galleryPet model pet =
@@ -89,11 +115,13 @@ detailExplanation =
             ]
         ]
 
+
 viewOption : KindFilter -> Html Msg
 viewOption kind =
     option
         [ value <| mapKindFilterToString kind ]
         [ text <| mapKindFilterToString kind ]
+
 
 searchForm =
     tinyDialog "Find your pet"
@@ -102,7 +130,7 @@ searchForm =
                 [ input [ class "form-control", placeholder "Search", onInput TextSearch ] []
                 ]
             , div [ class "form-group" ]
-                [ select [ class "form-control", on "change" (Json.Decode.map Filter targetValueKindDecoder ) ]
+                [ select [ class "form-control", on "change" (Json.Decode.map Filter targetValueKindDecoder) ]
                     [ viewOption Any
                     , viewOption (Specific Cat)
                     , viewOption (Specific Dog)
@@ -112,6 +140,7 @@ searchForm =
             ]
         ]
 
+
 selectedProfile : Pet -> Html a
 selectedProfile pet =
     tinyDialog pet.name
@@ -120,6 +149,7 @@ selectedProfile pet =
             [ button [ type' "button", class "btn btn-primary btn-lg dialog-centered" ] [ text "Setup date" ]
             ]
         ]
+
 
 signUpPet : Html Msg
 signUpPet =
@@ -152,6 +182,6 @@ view model =
                 [ div [ class "col-md-9" ] [ gallery model ]
                 , div [ class "col-md-3" ] [ detail model.selectedPet ]
                 ]
-            , (petcupidFooter model)
+            , petcupidFooter
             ]
         ]

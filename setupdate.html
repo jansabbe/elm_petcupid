@@ -6,9 +6,17 @@
 	<title>PetCupid</title>
 	<link rel="stylesheet" href="assets/main.css">
 	<script type="text/javascript" src="/_compile/src/Maps.elm"></script>
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.1/dist/leaflet.css" />
+	<script src="https://unpkg.com/leaflet@1.0.1/dist/leaflet.js"></script>
+
 	<script>
         document.addEventListener("DOMContentLoaded", function(event) { 
             runElmProgram();
+			
+			var map = L.map(document.getElementById('mapContainer')).setView([51.505, -0.09], 13);
+			L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+				attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+			}).addTo(map);
         });
     </script>
 </head>
