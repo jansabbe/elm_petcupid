@@ -11,12 +11,24 @@
 
 	<script>
         document.addEventListener("DOMContentLoaded", function(event) { 
-            runElmProgram();
-			
-			var map = L.map(document.getElementById('mapContainer')).setView([51.505, -0.09], 13);
-			L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-				attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-			}).addTo(map);
+            var app = runElmProgram();
+			app.ports.initialized.subscribe(function(coordinate) {
+				var leafletCoordinate = [coordinate.longitude, coordinate.latitude]
+				var map = L.map(document.getElementById('mapContainer')).setView(leafletCoordinate, 9);
+				L.tileLayer('http://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.{ext}', {
+					attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+					minZoom: 0,
+					maxZoom: 18,
+					ext: 'png'
+				}).addTo(map); 
+
+				var marker = L.marker(leafletCoordinate, {draggable:true}).addTo(map);
+				marker.on("dragend", function () {
+					var latlng = marker.getLatLng();
+					app.ports.dragged.send({longitude: latlng.lng, latitude: latlng.lat})
+					console.log()
+				})
+    		});
         });
     </script>
 </head>
