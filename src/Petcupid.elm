@@ -1,4 +1,4 @@
-module Main exposing (..)
+module Petcupid exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -105,8 +105,15 @@ isPetSelected model pet =
         Just selectedPet ->
             selectedPet.id == pet.id
 
-filterPets model =
-    List.filter (\pet -> contains model.search.textSearch (pet.profileText ++ pet.name) ) model.pets
+
+filterPets : String -> List Pet -> List Pet
+filterPets textSearch pets =
+    let
+        petFilter =
+            \pet -> contains (textSearch |> toLower) (pet.profileText ++ pet.name |> toLower)
+    in
+        List.filter petFilter pets
+
 
 update : Msg -> Model -> Model
 update msg ({ search } as model) =
@@ -135,7 +142,7 @@ petcupidFooter model =
 
 gallery : Model -> Html Msg
 gallery model =
-    div [ class "gallery" ] (List.map (galleryPet model) (filterPets model))
+    div [ class "gallery" ] (List.map (galleryPet model) (filterPets model.search.textSearch model.pets))
 
 
 galleryPet : Model -> Pet -> Html Msg
