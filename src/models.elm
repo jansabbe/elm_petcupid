@@ -1,5 +1,7 @@
 module Models exposing (..)
 
+import Routing exposing (..)
+
 type Kind
     = Cat
     | Dog
@@ -22,6 +24,7 @@ type alias Model =
         { textSearch : String
         , kindFilter : KindFilter
         }
+    , route : Routing.Route
     }
 
 
@@ -35,9 +38,11 @@ type Msg
     | Filter KindFilter
     | Select Pet
 
+initialModel : Routing.Route -> Model
+initialModel route = model route
 
-model : Model
-model =
+model : Routing.Route -> Model
+model route =
     { pets =
         [ { id = 1
           , name = "Princess"
@@ -87,4 +92,5 @@ model =
         { textSearch = ""
         , kindFilter = Any
         }
+    , route = route
     }
