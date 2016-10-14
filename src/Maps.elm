@@ -18,12 +18,27 @@ port initialized : Coordinate -> Cmd msg
 port dragged : (Coordinate -> msg) -> Sub msg
 
 
-type alias MapModel =
-    { coordinate : Coordinate, address : String }
+main =
+    App.program
+        { init = init
+        , view = view
+        , update = update
+        , subscriptions = subscriptions
+        }
 
 
-type alias Coordinate =
-    { latitude : Float, longitude : Float }
+init : ( MapModel, Cmd Msg )
+init =
+    let
+        initialModel =
+            { coordinate = (Coordinate 50.84768133805717 4.727554321289063)
+            , address = ""
+            }
+
+        initialCommandos =
+            [ initialized initialModel.coordinate, lookup initialModel.coordinate ]
+    in
+        ( initialModel, Cmd.batch initialCommandos )
 
 
 type Msg
@@ -32,11 +47,49 @@ type Msg
     | LookedUpCoordinates String
 
 
-initialModel : MapModel
-initialModel =
-    { coordinate = (Coordinate 50.84768133805717 4.727554321289063)
-    , address = ""
-    }
+view : MapModel -> Html Msg
+view model =
+    div []
+        [ petcupidHeader
+        , div [ class "container-fluid" ]
+            [ div [ class "row" ]
+                [ div [ class "col-md-8 col-md-offset-2" ]
+                    [ div [ class "big-dialog" ]
+                        [ fullProfile
+                        , interactiveMap model
+                        , buttons
+                        ]
+                    ]
+                ]
+            , petcupidFooter
+            ]
+        ]
+
+
+update : Msg -> MapModel -> ( MapModel, Cmd Msg )
+update msg model =
+    case msg of
+        MarkerDragged newCoordinate ->
+            ( { model | coordinate = newCoordinate }, lookup newCoordinate )
+
+        LookupFailed error ->
+            ( model, Cmd.none )
+
+        LookedUpCoordinates address ->
+            ( { model | address = address }, Cmd.none )
+
+
+subscriptions : MapModel -> Sub Msg
+subscriptions model =
+    dragged MarkerDragged
+
+
+type alias MapModel =
+    { coordinate : Coordinate, address : String }
+
+
+type alias Coordinate =
+    { latitude : Float, longitude : Float }
 
 
 fullProfile =
@@ -65,29 +118,6 @@ buttons =
         ]
 
 
-view model =
-    div []
-        [ petcupidHeader
-        , div [ class "container-fluid" ]
-            [ div [ class "row" ]
-                [ div [ class "col-md-8 col-md-offset-2" ]
-                    [ div [ class "big-dialog" ]
-                        [ fullProfile
-                        , interactiveMap model
-                        , buttons
-                        ]
-                    ]
-                ]
-            , petcupidFooter
-            ]
-        ]
-
-
-init : ( MapModel, Cmd Msg )
-init =
-    ( initialModel, Cmd.batch [ initialized initialModel.coordinate, lookup initialModel.coordinate ] )
-
-
 lookup : Coordinate -> Cmd Msg
 lookup { latitude, longitude } =
     let
@@ -100,30 +130,3 @@ lookup { latitude, longitude } =
 decodeOpenstreetmap : Json.Decoder String
 decodeOpenstreetmap =
     Json.at [ "display_name" ] Json.string
-
-
-subscriptions : MapModel -> Sub Msg
-subscriptions model =
-    dragged MarkerDragged
-
-
-update : Msg -> MapModel -> ( MapModel, Cmd Msg )
-update msg model =
-    case msg of
-        MarkerDragged newCoordinate ->
-            ( { model | coordinate = newCoordinate }, lookup newCoordinate )
-
-        LookupFailed error ->
-            ( model, Cmd.none )
-
-        LookedUpCoordinates address ->
-            ( { model | address = address }, Cmd.none )
-
-
-main =
-    App.program
-        { init = init
-        , view = view
-        , update = update
-        , subscriptions = subscriptions
-        }
