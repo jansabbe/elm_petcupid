@@ -6,9 +6,29 @@
 	<title>PetCupid</title>
 	<link rel="stylesheet" href="assets/main.css">
 	<script type="text/javascript" src="/_compile/src/Maps.elm"></script>
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.1/dist/leaflet.css" />
+	<script src="https://unpkg.com/leaflet@1.0.1/dist/leaflet.js"></script>
+
 	<script>
         document.addEventListener("DOMContentLoaded", function(event) { 
-            runElmProgram();
+            var app = runElmProgram();
+			app.ports.initialized.subscribe(function(coordinate) {
+				var leafletCoordinate = [coordinate.longitude, coordinate.latitude]
+				var map = L.map(document.getElementById('mapContainer')).setView(leafletCoordinate, 9);
+				L.tileLayer('http://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.{ext}', {
+					attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+					minZoom: 0,
+					maxZoom: 18,
+					ext: 'png'
+				}).addTo(map); 
+
+				var marker = L.marker(leafletCoordinate, {draggable:true}).addTo(map);
+				marker.on("dragend", function () {
+					var latlng = marker.getLatLng();
+					app.ports.dragged.send({longitude: latlng.lng, latitude: latlng.lat})
+					console.log()
+				})
+    		});
         });
     </script>
 </head>

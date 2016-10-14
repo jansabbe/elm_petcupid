@@ -1,12 +1,35 @@
-module Maps exposing (..)
+port module Maps exposing (..)
 
-import Petcupid exposing (..)
+import Views exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.App as App
 import Html.Events exposing (..)
 import String exposing (..)
 import Json.Decode
+
+
+port initialized : Coordinate -> Cmd msg
+
+
+port dragged : (Coordinate -> msg) -> Sub msg
+
+
+type alias MapModel =
+    { coordinate : Coordinate }
+
+
+type alias Coordinate =
+    { longitude : Float, latitude : Float }
+
+
+type Msg
+    = MarkerDragged Coordinate
+
+
+initialModel : MapModel
+initialModel =
+    { coordinate = (Coordinate 50.85 4.35) }
 
 
 fullProfile =
@@ -19,16 +42,12 @@ fullProfile =
         ]
 
 
-googleMap =
+interactiveMap : MapModel -> Html Msg
+interactiveMap model =
     div [ class "map" ]
         [ p [] [ em [] [ text "Drag and drop to select the park where you want to play with Bobby" ] ]
-        , iframe
-            [ src "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d80598.85688639637!2d4.375389949999999!3d50.85497504999999!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47c3a4ed73c76867%3A0xc18b3a66787302a7!2sBrussel!5e0!3m2!1snl!2sbe!4v1398846054531"
-            , width 600
-            , height 350
-            , style [ ( "border", "0" ) ]
-            ]
-            []
+        , p [] [ text ("Coordinate : " ++ (toString model.coordinate.latitude) ++ ", " ++ (toString model.coordinate.longitude)) ]
+        , div [ class "map-container", id "mapContainer" ] []
         ]
 
 
@@ -39,7 +58,7 @@ buttons =
         ]
 
 
-main =
+view model =
     div []
         [ petcupidHeader
         , div [ class "container-fluid" ]
@@ -47,11 +66,37 @@ main =
                 [ div [ class "col-md-8 col-md-offset-2" ]
                     [ div [ class "big-dialog" ]
                         [ fullProfile
-                        , googleMap
+                        , interactiveMap model
                         , buttons
                         ]
                     ]
                 ]
-            , (petcupidFooter model)
+            , petcupidFooter
             ]
         ]
+
+
+init : ( MapModel, Cmd Msg )
+init =
+    ( initialModel, initialized initialModel.coordinate )
+
+
+subscriptions : MapModel -> Sub Msg
+subscriptions model =
+    dragged MarkerDragged
+
+
+update : Msg -> MapModel -> ( MapModel, Cmd Msg )
+update msg model =
+    case msg of
+        MarkerDragged newCoordinate ->
+            ( { model | coordinate = newCoordinate }, Cmd.none )
+
+
+main =
+    App.program
+        { init = init
+        , view = view
+        , update = update
+        , subscriptions = subscriptions
+        }
