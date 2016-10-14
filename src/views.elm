@@ -7,6 +7,9 @@ import Html.Events exposing (..)
 import String exposing (..)
 import Json.Decode
 import Models exposing (..)
+import Routing exposing (..)
+
+import SignUp.View exposing (signUpView)
 
 isPetSelected model pet =
     case model.selectedPet of
@@ -143,8 +146,8 @@ detail selectedPet =
         )
 
 
-view : Model -> Html Msg
-view model =
+indexPage : Model -> Html Msg
+indexPage model =
     div []
         [ petcupidHeader
         , div [ class "container-fluid" ]
@@ -155,3 +158,28 @@ view model =
             , (petcupidFooter model)
             ]
         ]
+
+
+page : Model -> Html Msg
+page model =
+    case model.route of
+        Index ->
+            indexPage model
+
+        SignUp ->
+            signUpView model
+
+        NotFoundRoute ->
+            notFoundView
+
+notFoundView : Html msg
+notFoundView =
+    div [ style [("background-color", "powderblue")] ]
+        [ text "Not found"
+        ]
+
+view : Model -> Html Msg
+view model =
+    div []
+        [ page model ]
+

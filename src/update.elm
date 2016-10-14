@@ -9,9 +9,9 @@ import Json.Decode
 
 import Models exposing (..)
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> (Model, Cmd Msg)
 update msg ({ search } as model) =
-    case msg of
+    (case msg of
         TextSearch newSearchText ->
             { model | search = { search | textSearch = newSearchText } }
 
@@ -19,6 +19,4 @@ update msg ({ search } as model) =
             { model | search = { search | kindFilter = newFilter } }
 
         Select pet ->
-            { model | selectedPet = Just pet }
-
-
+            { model | selectedPet = Just pet }, Cmd.none)
