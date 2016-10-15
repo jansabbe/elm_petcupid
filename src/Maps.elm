@@ -4,8 +4,6 @@ import Index.View exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.App as App
-import Html.Events exposing (..)
-import String exposing (..)
 import Json.Decode
 import Task
 import Http
@@ -134,5 +132,16 @@ lookup { latitude, longitude } =
 decodeOpenstreetmap : Decoder String
 decodeOpenstreetmap =
     object2 (\road city -> road ++ ", " ++ city)
-        (at [ "address", "road" ] string)
-        (at [ "address", "city" ] string)
+        (oneOf
+            [ (at [ "address", "road" ] string)
+            , (at [ "address", "cycleway" ] string)
+            , (succeed "Unknown road")
+            ]
+        )
+        (oneOf
+            [ (at [ "address", "city" ] string)
+            , (at [ "address", "town" ] string)
+            , (at [ "address", "village" ] string)
+            , (succeed "Unknown place")
+            ]
+        )
